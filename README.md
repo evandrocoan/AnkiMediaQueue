@@ -6,7 +6,7 @@ Use `anki\qt\ts> npm test -- reviewer-exceptions.test.ts` to run a single test f
 
 1. `npm run build`
 1. `npm run test`
-1. `npm install --no-optional --only=dev`
+1. `npm install --no-optional`
 
 Use this inside a test to pause its execution, allowing you to open the chrome console
 and while keeping the express server running: chrome://inspect/#devices
