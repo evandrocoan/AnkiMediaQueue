@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "commonjs",
+        "lib": ["es2018", "dom"],
+        "rootDir": "src",
+        "outDir": "build",
+        "strict": true,
+        /* Enable all strict type-checking options. */
+        "noImplicitAny": false,
+        /* Raise error on expressions and declarations with an implied 'any' type. */
+        "strictNullChecks": false,
+        /* Enable strict null checks. */
+        "noImplicitThis": false,
+        /* Raise error on 'this' expressions with an implied 'any' type. */
+        "esModuleInterop": true
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "src/**/*.test.ts"
+    ]
+}
