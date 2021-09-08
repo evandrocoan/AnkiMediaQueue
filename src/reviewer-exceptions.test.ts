@@ -174,10 +174,7 @@ describe("Test question and answer exception handling", () => {
 
         document.body.appendChild(fake_audio);
         expect(() => ankimedia.setup()).toThrowError(
-            `A media element is missing its 'src=null`
-        );
-        expect(() => ankimedia.setup()).toThrowError(
-            `id=|src=|source=|data-id=null|data-speed=null|`
+            `A media element is missing its 'src=null'`
         );
     });
 });

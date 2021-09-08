@@ -3,8 +3,7 @@
     "globalSetup": "./globalSetup.js",
     "globalTeardown": "./globalTeardown.js",
     "moduleDirectories": [
-        "node_modules",
-        "../../ts/node_modules"
+        "node_modules"
     ],
     "roots": [
         "<rootDir>/src"

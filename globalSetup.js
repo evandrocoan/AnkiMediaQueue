@@ -3,6 +3,8 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 
+require('dotenv').config()
+
 module.exports = async () => {
     await setupExpress();
     await setupPuppeteer();

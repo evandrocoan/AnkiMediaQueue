@@ -16,7 +16,11 @@
       ],
       "console": "internalConsole",
       "internalConsoleOptions": "neverOpen",
-      "port": 9229
+      "port": 9229,
+      "env": {
+        "PUPPETEER_HEADLESS": "false",
+        "NODE_ENV": "development"
+      }
     }
   ]
 }

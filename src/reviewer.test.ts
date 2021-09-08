@@ -5,7 +5,6 @@
 import "./ankimedia";
 const { ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT } = require("./ankimedia");
 
-// Use `anki\qt\ts> npm test -- reviewer-exceptions.test.ts` to run a single test file
 jest.disableAutomock();
 jest.setTimeout(30000);
 
@@ -13,13 +12,6 @@ describe("Test question and answer audios", () => {
     let self: any = global;
     let page = self.page;
     let address = process.env.SERVER_ADDRESS;
-
-    // Use this in a test to pause its execution, allowing you to open the chrome console
-    // and while keeping the express server running: chrome://inspect/#devices
-    // debugger; await new Promise(function(resolve) {});
-    // jest.setTimeout(2000000000);
-    // (async () => await page.setDefaultTimeout(2000000000))();
-    // (async () => await page.setDefaultNavigationTimeout(2000000000))();
 
     var test_setup = `
         ankimedia.setup( {extra: media => {
