@@ -24,3 +24,10 @@ PUPPETEER_SLOWMO=500   # milliseconds
 PUPPUPPETEER_CHROME_ARGS="--window-position=960,10"
 PUPPETEER_HEADLESS=false
 ```
+
+### License
+
+```
+/* Copyright: Ankitects Pty Ltd and contributors
+ * License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html */
+```
