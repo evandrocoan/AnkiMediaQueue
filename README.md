@@ -2,11 +2,11 @@
 
 Use `export PUPPETEER_HEADLESS=false` to see a chrome windows running the tests.
 
-Use `anki\qt\ts> npm test -- reviewer-exceptions.test.ts` to run a single test file
-
+1. `npm install --no-optional` (requires npm --version == 6.14.15 or superior)
 1. `npm run build`
 1. `npm run test`
-1. `npm install --no-optional`
+
+Use `anki\qt\ts> npm test -- reviewer-exceptions.test.ts` to run a single test file
 
 ![](https://user-images.githubusercontent.com/5332158/80896475-faf41400-8cc4-11ea-9dcc-553569eb567b.gif)
 
