@@ -172,6 +172,7 @@ describe("Test question and answer audios", () => {
         await page.goto(`${address}/main_webview.html`);
         await page.waitForSelector(`[id="qa"]`);
         expect(await page.evaluate(async () => ankimedia.is_setup)).toEqual(false);
+        // console.log(`Running '${expect.getState().currentTestName}'.`);
     });
 
     test.each([
@@ -221,6 +222,12 @@ describe("Test question and answer audios", () => {
             `silence 2.mp3`,
             `ankimedia.setup({delay: 0, wait: false, medias: []}); ankimedia.add( "silence 2.mp3" );`,
             `dataSpeedTemplate`,
+        ],
+        // Sounds names with %20 should play normally
+        [
+            `silence%201.mp3`,
+            `ankimedia.setup(); ankimedia.add( "silence 1.mp3", "front" );`,
+            `questionTemplate`,
         ],
     ])(
         `Showing a question should play its audio file automatically:\nfront %s '%s'\n...`,

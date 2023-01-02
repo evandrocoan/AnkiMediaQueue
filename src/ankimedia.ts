@@ -94,6 +94,7 @@ class AnkiMediaQueue {
         this._play = this._play.bind(this);
         this._playnext = this._playnext.bind(this);
         this._getMediaElement = this._getMediaElement.bind(this);
+        this.__getMediaElement = this.__getMediaElement.bind(this);
         this.setup = this.setup.bind(this);
         this._getSource = this._getSource.bind(this);
         this._fixDuplicates = this._fixDuplicates.bind(this);
@@ -305,32 +306,41 @@ class AnkiMediaQueue {
      */
     add(filename, where = undefined, speed = undefined) {
         speed = speed || 1.0;
+
         if (arguments.length < 1 || arguments.length > 3) {
             throw new Error(
                 `The function ankimedia.add() requires from 1 up to 3 argument(s) only, not ${arguments.length}!`
             );
         }
 
-        let media = this._getMediaElement(filename, this.add_duplicates);
-        if (media) {
-            where = media.getAttribute("data-where") || where || this._whereIs(media);
-        }
-        this._validateSetup("add");
-
         if (!(typeof filename == "string")) {
             throw new Error(
                 `The 'filename=${filename}/${typeof filename}' is not a valid string. ` +
-                    this._getMediaInfo(media)
+                    this._getMediaInfo(undefined)
             );
         }
+
         filename = filename.trim();
         if (filename.length < 1) {
             console.log(
                 `The ${where} 'filename=${filename}' is too short. Not adding this media! ` +
-                    this._getMediaInfo(media)
+                    this._getMediaInfo(undefined)
             );
             return;
         }
+
+        let media = this._getMediaElement(filename, this.add_duplicates);
+        if (media) {
+            where = media.getAttribute("data-where") || where || this._whereIs(media);
+        }
+        else {
+            console.log(
+                `Warning: Could not find an HTML audio element when adding '${filename}'! ` +
+                    this._getMediaInfo(media)
+            );
+        }
+
+        this._validateSetup("add");
         this._validateWhere(where, "add", media);
         this._validateSpeed(speed, media);
 
@@ -462,6 +472,10 @@ class AnkiMediaQueue {
                 // this._debug(`Playing ${this.skip_front} ${!!media} '${filename}'...`);
                 if (!media) {
                     media = new Audio(filename);
+                    console.log(
+                        `Warning: Could not find an HTML audio element when playing '${filename}'! ` +
+                            this._getMediaInfo(media)
+                    );
                 }
             }
             if (media && this.skip_front && is_front) {
@@ -491,7 +505,7 @@ class AnkiMediaQueue {
                 );
             }
             this._startnext = (event) => {
-                if (this.playing_back.length || this.playing_back.length) {
+                if (this.playing_back.length) {
                     this._playing_element_timer = setTimeout(
                         this._playnext,
                         this.delay * 1000
@@ -530,6 +544,17 @@ class AnkiMediaQueue {
     }
 
     _getMediaElement(filename: string, selected: Map<string, number>) {
+        // Anki is filling .src audio fields replacing ' ' with %20, which breaks everything as
+        // .add() still being called with spaces ' ' instead of %20. Then, try both variations
+        // in case some day Anki fixes its interface and stop replacing ' ' with %20.
+        let media = this.__getMediaElement(filename, selected);
+        if (!media) {
+            media = this.__getMediaElement(filename.replace(/ /g, '%20'), selected);
+        }
+        return media;
+    }
+
+    __getMediaElement(filename: string, selected: Map<string, number>) {
         let media = this.files.get(filename);
         if (media) {
             // if duplicate elements were found, select the one in a specific index

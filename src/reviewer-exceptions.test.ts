@@ -18,6 +18,7 @@ describe("Test question and answer exception handling", () => {
     beforeEach(async () => {
         ankimedia._reset();
         document.body.innerHTML = "";
+        // console.log(`Running '${expect.getState().currentTestName}'.`);
     });
 
     test(`ankimedia.setup() with invalid parameters`, async function () {
