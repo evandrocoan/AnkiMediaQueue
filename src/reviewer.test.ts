@@ -11,6 +11,7 @@ jest.setTimeout(5000);
 describe("Test question and answer audios", () => {
     let self: any = global;
     let page = self.page;
+    let pagelogs = self.pagelogs;
     let address = process.env.SERVER_ADDRESS;
 
     var test_setup = `
@@ -173,6 +174,11 @@ describe("Test question and answer audios", () => {
         await page.waitForSelector(`[id="qa"]`);
         expect(await page.evaluate(async () => ankimedia.is_setup)).toEqual(false);
         // console.log(`Running '${expect.getState().currentTestName}'.`);
+        pagelogs.length = 0;
+    });
+
+    afterEach(async () => {
+        expect(pagelogs).toHaveLength(0);
     });
 
     test.each([
@@ -295,7 +301,12 @@ describe("Test question and answer audios", () => {
             `noAudioTemplate`
         );
         await page.waitForSelector(`input[type="button"]`);
+
         expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(true);
+        expect(pagelogs[0]).toContain('Could not find an HTML audio element when adding');
+        expect(pagelogs[1]).toContain('Could not find an HTML audio element when playing');
+        expect(pagelogs).toHaveLength(2);
+        pagelogs.length = 0;
     });
 
     test(`Test showing a question does not reset ankimedia state\n...`, async function () {
@@ -316,6 +327,11 @@ describe("Test question and answer audios", () => {
 
         expect(await page.evaluate(async () => ankimedia.is_setup)).toEqual(true);
         expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(true);
+
+        expect(pagelogs[0]).toContain('Could not find an HTML audio element when adding');
+        expect(pagelogs[1]).toContain('Could not find an HTML audio element when playing');
+        expect(pagelogs).toHaveLength(2);
+        pagelogs.length = 0;
     });
 
     test(`Test ankimedia.setup{delay} parameter creates an delay between medias\n...`, async function () {

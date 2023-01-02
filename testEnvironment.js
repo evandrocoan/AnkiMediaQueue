@@ -26,11 +26,30 @@ class ExpressEnvironment extends TestEnvironment {
         // https://github.com/puppeteer/puppeteer/issues/5737
         let [default_page] = await browser.pages();
         await default_page.close();
+        let pagelogs = [];
 
-        page.on('console', async msg => console[msg._type](
-            ...await Promise.all(msg.args().map(arg => arg.jsonValue()))
-        ));
+        page.on('console', async msg => {
+            const consoleMap = {
+                'warning' : 'warn',
+                'startGroup' : 'group',
+                'endGroup' : 'groupEnd',
+            };
+
+            let msgType = msg._type;
+            if(consoleMap[msgType]) {
+                msgType = consoleMap[msgType];
+            }
+            else if(typeof console[msgType] === "undefined") {
+                console.warn(`UNKNOWN CONSOLE TYPE: ${msgType}`);
+                msgType = 'warn';
+            }
+
+            let items = [...await Promise.all(msg.args().map(arg => arg.jsonValue() /* arg.toString() */ ))];
+            pagelogs.push(...items);
+            console[msgType](...items);
+        });
         this.global.page = page;
+        this.global.pagelogs = pagelogs;
         this.global.browser = browser;
         this.global.jsdom = this.dom;
     }

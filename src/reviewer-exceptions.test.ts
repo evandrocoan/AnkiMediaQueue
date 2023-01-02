@@ -14,11 +14,26 @@ jest.setTimeout(100000);
 
 describe("Test question and answer exception handling", () => {
     let ankimedia = new AnkiMediaQueue();
+    let pagelogs = [];
+    let oldconsole = console.log;
+
+    console.log = function(...args) {
+        pagelogs.push(...args);
+        oldconsole(`'${expect.getState().currentTestName}':\n`, ...args);
+    }
 
     beforeEach(async () => {
         ankimedia._reset();
         document.body.innerHTML = "";
-        // console.log(`Running '${expect.getState().currentTestName}'.`);
+        pagelogs.length = 0;
+    });
+
+    afterEach(async () => {
+        expect(pagelogs).toHaveLength(0);
+    });
+
+    afterAll(async () => {
+        console.log = oldconsole;
     });
 
     test(`ankimedia.setup() with invalid parameters`, async function () {
@@ -59,6 +74,10 @@ describe("Test question and answer exception handling", () => {
         expect(() => ankimedia.add("front", "thing.mp3")).toThrowError(
             `setup() function must be called before calling`
         );
+
+        expect(pagelogs[0]).toContain(`Could not find an HTML audio element when adding`);
+        expect(pagelogs).toHaveLength(1);
+        pagelogs.length = 0;
     });
 
     test(`do not pass the correct value of where`, async function () {
@@ -80,6 +99,12 @@ describe("Test question and answer exception handling", () => {
             `is not a valid positive number`
         );
         expect(() => ankimedia.add("thing.mp3")).toThrowError(`Missing the 'where=`);
+
+        expect(pagelogs[0]).toContain(`Could not find an HTML audio element when adding`);
+        expect(pagelogs[1]).toContain(`Could not find an HTML audio element when adding`);
+        expect(pagelogs[2]).toContain(`Could not find an HTML audio element when adding`);
+        expect(pagelogs).toHaveLength(3);
+        pagelogs.length = 0;
     });
 
     test(`do not use the correct value of where with addall()`, async function () {
@@ -123,6 +148,11 @@ describe("Test question and answer exception handling", () => {
         expect(() => ankimedia.add("thing.mp3", "front", -1)).toThrowError(
             /The 'speed=.*' is not a valid positive number/
         );
+
+        expect(pagelogs[0]).toContain(`Could not find an HTML audio element when adding`);
+        expect(pagelogs[1]).toContain(`Could not find an HTML audio element when adding`);
+        expect(pagelogs).toHaveLength(2);
+        pagelogs.length = 0;
     });
 
     test(`Calling functions with invalid arguments count`, async function () {
