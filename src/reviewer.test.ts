@@ -6,7 +6,7 @@ import "./ankimedia";
 const { ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT } = require("./ankimedia");
 
 jest.disableAutomock();
-jest.setTimeout(30000);
+jest.setTimeout(5000);
 
 describe("Test question and answer audios", () => {
     let self: any = global;

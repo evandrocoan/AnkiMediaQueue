@@ -6,7 +6,11 @@ Use `export PUPPETEER_HEADLESS=false` to see a chrome windows running the tests.
 1. `npm run build`
 1. `npm run test`
 
-Use `anki\qt\ts> npm test -- reviewer-exceptions.test.ts` to run a single test file
+Use `anki\qt\ts> npm run build && npm run test -- reviewer-exceptions.test.ts` to run a single test file.
+
+Use `anki\qt\ts> npm run build && npm run test -- --testNamePattern "Test showing a question does not reset ankimedia state"` to run a single test case.
+
+On Windows, use `cmd.exe` instead msys2 bash, due to npm output buffer issues.
 
 ![](https://user-images.githubusercontent.com/5332158/80896475-faf41400-8cc4-11ea-9dcc-553569eb567b.gif)
 
@@ -14,6 +18,7 @@ Use this inside a test to pause its execution, allowing you to open the chrome c
 and while keeping the express server running: chrome://inspect/#devices
 ```js
 jest.setTimeout(2000000000);
+// Também adicione `page.waitForSelector(..., , {timeout: 5000000})` caso ainda tenha timeouts!
 
 (async () => await page.setDefaultTimeout(2000000000))();
 (async () => await page.setDefaultNavigationTimeout(2000000000))();
