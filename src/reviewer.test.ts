@@ -617,7 +617,7 @@ describe("Test question and answer audios", () => {
             expect(question_times[0]).toBeLessThan(answer_times[0]);
             expect(question_times[1]).toBeLessThan(answer_times[1]);
 
-            await page.waitFor(ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT);
+            await page.waitForTimeout(ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT);
             await showEverything("silence 1.mp3", "silence 2.mp3");
             await page.waitForSelector(`audio[id="silence 2.mp3"]`);
             expect(await getPausedMedias()).toEqual(0);
