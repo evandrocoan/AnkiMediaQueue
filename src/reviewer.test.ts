@@ -235,46 +235,37 @@ describe("Test question and answer audios", () => {
         }
     );
 
-    test.each([
-        [
-            `silence 1.mp3`,
-            `ankimedia.setup(); ankimedia.addall( "front" );`,
-            `questionTemplate`,
-        ],
-    ])(
-        `Pausing a audio should stop it from playing:\nfront %s '%s'\n...`,
-        async function (front_mp3, front_setup, templateName) {
-            await showQuestion(front_mp3, front_setup, templateName);
-            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-started-at]`);
-            expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
+    test(`Pausing a audio should stop it from playing:\n...`, async function () {
+        await showQuestion("silence 1.mp3", `ankimedia.setup(); ankimedia.addall( "front" );`, `questionTemplate`);
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-started-at]`);
+        expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
 
-            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
-            expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(false);
-            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
-            expect(await getPausedMedias()).toEqual(0);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+        expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(false);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+        expect(await getPausedMedias()).toEqual(0);
 
-            let question_times = await getPlayTimes(front_mp3);
-            let audio_src = await getAudioSource(front_mp3);
+        let question_times = await getPlayTimes("silence 1.mp3");
+        let audio_src = await getAudioSource("silence 1.mp3");
 
-            expect(audio_src).toEqual(front_mp3);
-            expect(question_times[0]).toBeGreaterThan(0);
-            expect(question_times[1]).toBeFalsy();
+        expect(audio_src).toEqual("silence 1.mp3");
+        expect(question_times[0]).toBeGreaterThan(0);
+        expect(question_times[1]).toBeFalsy();
 
-            expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(true);
-            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
-            expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
+        expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(true);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+        expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
 
-            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`);
-            expect(await getPausedMedias()).toEqual(0);
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`);
+        expect(await getPausedMedias()).toEqual(0);
 
-            question_times = await getPlayTimes(front_mp3);
-            audio_src = await getAudioSource(front_mp3);
+        question_times = await getPlayTimes("silence 1.mp3");
+        audio_src = await getAudioSource("silence 1.mp3");
 
-            expect(audio_src).toEqual(front_mp3);
-            expect(question_times[0]).toBeLessThan(question_times[1]);
-            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
-        }
-    );
+        expect(audio_src).toEqual("silence 1.mp3");
+        expect(question_times[0]).toBeLessThan(question_times[1]);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+    });
 
     test(`Pausing between playing two audios should play the next audio after unpausing\n...`, async function () {
         await questionAndAnswer(
@@ -305,6 +296,44 @@ describe("Test question and answer audios", () => {
         expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(false);
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
         expect(answer_times[0] - question_times[1]).toBeLessThan(1500);
+    });
+
+    test(`Pausing on the first audio should play the next audio after unpausing:\n...`, async function () {
+        await questionAndAnswer(
+            "silence 1.mp3",
+            `ankimedia.setup({delay: 1.5}); ankimedia.add( "silence 1.mp3", "back" );`,
+            "silence 2.mp3",
+            `ankimedia.setup({delay: 1.5}); ankimedia.add( "silence 2.mp3", "back" );`
+        );
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-started-at]`);
+        expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
+
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+        expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(false);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+        expect(await getPausedMedias()).toEqual(0);
+
+        let question_times = await getPlayTimes("silence 1.mp3");
+        let audio_src = await getAudioSource("silence 1.mp3");
+
+        expect(audio_src).toEqual("silence 1.mp3");
+        expect(question_times[0]).toBeGreaterThan(0);
+        expect(question_times[1]).toBeFalsy();
+
+        expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(true);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+        expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
+
+        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+        expect(await getPausedMedias()).toEqual(0);
+
+        question_times = await getPlayTimes("silence 1.mp3");
+        let answer_times = await getPlayTimes("silence 2.mp3");
+
+        expect(await getPausedMedias()).toEqual(0);
+        expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(false);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+        expect(answer_times[0] - question_times[1]).toBeGreaterThan(1500);
     });
 
     test.each([[`"front"`], [``]])(
