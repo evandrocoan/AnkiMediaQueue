@@ -521,7 +521,7 @@ class AnkiMediaQueue {
                 );
             }
             this._startnext = (event) => {
-                if (this.playing_back.length) {
+                if (this.playing_back.length || this.playing_front.length) {
                     this._playing_element_timer = setTimeout(
                         this._playnext,
                         this.delay * 1000
