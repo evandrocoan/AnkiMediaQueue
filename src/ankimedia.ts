@@ -157,16 +157,6 @@ class AnkiMediaQueue {
         this._add_duplicates_reset = 0;
         this._addall_reset = 0;
         this._addall_last_where = "front";
-
-        if (this._playing_element) {
-            this._playing_element.removeEventListener("ended", this._startnext as any);
-        }
-        if (this._playing_element_timer) {
-            clearTimeout(this._playing_element_timer);
-        }
-        this._playing_element = new Audio();
-        this._playing_element_timer = undefined;
-        this._startnext = (event) => {};
         this._clearPlayingElement();
         this.autoplay = true;
         this.is_playing = false;
