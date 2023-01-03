@@ -63,6 +63,7 @@ class AnkiMediaQueue {
     _playing_element: HTMLMediaElement | undefined;
     _playing_media: HTMLMediaElement | undefined;
     _startnext: Function;
+    _was_next_play_paused: boolean;
     autoplay: boolean;
     is_playing: boolean;
     is_autoplay: boolean;
@@ -158,6 +159,7 @@ class AnkiMediaQueue {
         this._addall_reset = 0;
         this._addall_last_where = "front";
         this._clearPlayingElement();
+        this._was_next_play_paused = false;
         this.autoplay = true;
         this.is_playing = false;
         this.is_autoplay = false;
@@ -453,6 +455,9 @@ class AnkiMediaQueue {
         this._playnext();
     }
 
+    /**
+     * Return false if no media was started and true if a media was started.
+     */
     _playnext() {
         this._playing_element_timer = undefined;
         let filename = undefined;
@@ -523,10 +528,12 @@ class AnkiMediaQueue {
             this._playing_element = media;
             this._startnext = this._startnext.bind(this);
             media.addEventListener("ended", this._startnext as any, { once: true });
-        } else {
-            this.is_playing = false;
-            this._playing_element = undefined;
+            return true;
         }
+
+        this.is_playing = false;
+        this._playing_element = undefined;
+        return false;
     }
 
     _getMediaInfo(media) {
@@ -794,6 +801,7 @@ class AnkiMediaQueue {
                 }
                 this.is_autoplay = false;
                 this._playing_media = target;
+                this._was_next_play_paused = false;
 
                 setAnkiMedia((media) => {
                     if (media.id != target.id) {
@@ -813,6 +821,18 @@ class AnkiMediaQueue {
      * Return false if a media was paused and true if a media was started.
      */
     togglePause() {
+        if (this._playing_element_timer) {
+            clearTimeout(this._playing_element_timer);
+            this._playing_element_timer = undefined;
+            this._was_next_play_paused = true;
+            return false;
+        }
+
+        if (this._was_next_play_paused) {
+            this._was_next_play_paused = false;
+            return this._playnext();
+        }
+
         let playing_media = this._playing_element ? this._playing_element : this._playing_media;
         if(playing_media && playing_media.paused) {
             let playpromise = playing_media.play();

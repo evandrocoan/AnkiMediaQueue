@@ -276,6 +276,37 @@ describe("Test question and answer audios", () => {
         }
     );
 
+    test(`Pausing between playing two audios should play the next audio after unpausing\n...`, async function () {
+        await questionAndAnswer(
+            "silence 1.mp3",
+            `ankimedia.setup({delay: 1.5}); ankimedia.add( "silence 1.mp3", "back" );`,
+            "silence 2.mp3",
+            `ankimedia.setup({delay: 1.5}); ankimedia.add( "silence 2.mp3", "back" );`
+        );
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`);
+
+        expect(await getPausedMedias()).toEqual(0);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+        expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(false);
+
+        expect(await getPausedMedias()).toEqual(0);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+
+        expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(true);
+        expect(await getPausedMedias()).toEqual("silence 2.mp3, ");
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+
+        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+        let question_times = await getPlayTimes("silence 1.mp3");
+        let answer_times = await getPlayTimes("silence 2.mp3");
+
+        expect(await getPausedMedias()).toEqual(0);
+        expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(false);
+        expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+        expect(answer_times[0] - question_times[1]).toBeLessThan(1500);
+    });
+
     test.each([[`"front"`], [``]])(
         `Test disabling the setup(auto=false) stops starting the audio immediately:\nfront '%s'\n...`,
         async function (front_setup) {
