@@ -61,6 +61,7 @@ class AnkiMediaQueue {
     _addall_last_where: "front" | "back";
     play_duplicates: Map<string, number>;
     _playing_element: HTMLMediaElement | undefined;
+    _playing_media: HTMLMediaElement | undefined;
     _startnext: Function;
     autoplay: boolean;
     is_playing: boolean;
@@ -101,6 +102,7 @@ class AnkiMediaQueue {
         this._setupAudioPlay = this._setupAudioPlay.bind(this);
         this._checkDataAttributes = this._checkDataAttributes.bind(this);
         this._moveAudioElements = this._moveAudioElements.bind(this);
+        this.togglePause = this.togglePause.bind(this);
 
         this.playing_front = [];
         this.playing_back = [];
@@ -127,6 +129,18 @@ class AnkiMediaQueue {
     _reset(parameters: any = {}) {
         // this._debug(`_reset parameters '${JSON.stringify(parameters)}'`);
         let { skip_front_reset = false } = parameters;
+
+        // // Pause all medias before resetting the state of the next card
+        // try {
+        //     for (let [filename, media] of this.medias) {
+        //         console.log(`filename ${filename}, media ${media}, 'pause' in media ${media && 'pause' in media}.`)
+        //         if( media && 'pause' in media ) {
+        //             media.pause();
+        //         }
+        //     }
+        // }
+        // finally {
+        // }
 
         this.delay = 0.3;
         this.playing_front.length = 0;
@@ -497,7 +511,9 @@ class AnkiMediaQueue {
                         `Could not play '${filename}' due to '${error}'! ` +
                             this._getMediaInfo(media)
                     )
-                );
+                ).then(_ => {
+                    media.setAttribute( "data-has-started-at", Date.now() );
+                });
             } else {
                 console.log(
                     `Could not play the media '${filename}'! ` +
@@ -787,6 +803,7 @@ class AnkiMediaQueue {
                     this.playing_back.length = 0;
                 }
                 this.is_autoplay = false;
+                this._playing_media = target;
 
                 setAnkiMedia((media) => {
                     if (media.id != target.id) {
@@ -797,6 +814,33 @@ class AnkiMediaQueue {
         };
         media.addEventListener("play", auto_pause(media));
         clone.addEventListener("play", auto_pause(clone));
+
+        media.addEventListener( "ended", event => media.setAttribute( "data-has-ended-at", String(Date.now()) ) );
+        clone.addEventListener( "ended", event => clone.setAttribute( "data-has-ended-at", String(Date.now()) ) );
+    }
+
+    /**
+     * Return false if a media was paused and true if a media was started.
+     */
+    togglePause() {
+        let playing_media = this._playing_element ? this._playing_element : this._playing_media;
+        if(playing_media && playing_media.paused) {
+            let playpromise = playing_media.play();
+            if (playpromise) {
+                playpromise.catch((error) =>
+                    console.log(
+                        `Could not unpause the media due to '${error}'! ` +
+                            this._getMediaInfo(playing_media)
+                    )
+                );
+            }
+            return true;
+        }
+
+        setAnkiMedia((media) => {
+            media.pause();
+        }, this.other_medias);
+        return false;
     }
 }
 

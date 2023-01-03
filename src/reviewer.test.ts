@@ -14,24 +14,12 @@ describe("Test question and answer audios", () => {
     let pagelogs = self.pagelogs;
     let address = process.env.SERVER_ADDRESS;
 
-    var test_setup = `
-        ankimedia.setup( {extra: media => {
-            media.playbackRate = 4.0;
-            if( !media.getAttribute("data-has-tests-extra-events") ) {
-                media.setAttribute("data-has-tests-extra-events", true);
-                media.addEventListener( "play", event => media.setAttribute( "data-has-started-at", Date.now() ) );
-                media.addEventListener( "ended", event => media.setAttribute( "data-has-ended-at", Date.now() ) );
-            }
-        }});
-    `;
-
-    var cardTemplate = (media_tag, setup_code, first_text, test_setup) => {
+    var cardTemplate = (media_tag, setup_code, first_text) => {
         return `${first_text}
         <input type="button" value="x0.6" onclick="setAnkiMedia( media => { media.playbackRate = 0.6; } )">
         <input type="button" value="x10.6" onclick="setAnkiMedia( media => { media.playbackRate = 10.6; } )">
         ${media_tag}
         <script type="text/javascript">
-            ${test_setup}
             ${setup_code}
         </script>`;
     };
@@ -40,8 +28,7 @@ describe("Test question and answer audios", () => {
         return cardTemplate(
             `<audio src="${file_name}" controlslist="nodownload" controls></audio>`,
             setup_code,
-            `What is the past simple of the verb to bumb?<br>`,
-            test_setup
+            `What is the past simple of the verb to bumb?<br>`
         );
     };
 
@@ -49,8 +36,7 @@ describe("Test question and answer audios", () => {
         return cardTemplate(
             `<audio src="${file_name}" controlslist="nodownload" controls></audio>`,
             setup_code,
-            `<hr id="answer">The past simple is to boobs.<br>`,
-            test_setup
+            `<hr id="answer">The past simple is to boobs.<br>`
         );
     };
 
@@ -58,8 +44,7 @@ describe("Test question and answer audios", () => {
         return cardTemplate(
             `<audio src="${file_name}" data-speed="5" controlslist="nodownload" controls></audio>`,
             setup_code,
-            `What is the past simple of the verb to bumb?<br>`,
-            test_setup
+            `What is the past simple of the verb to bumb?<br>`
         );
     };
 
@@ -67,8 +52,7 @@ describe("Test question and answer audios", () => {
         return cardTemplate(
             file_name,
             setup_code,
-            `What is the past simple of the verb to bumb?<br>`,
-            ``
+            `What is the past simple of the verb to bumb?<br>`
         );
     };
 
@@ -76,8 +60,7 @@ describe("Test question and answer audios", () => {
         return cardTemplate(
             file_name,
             setup_code,
-            `What is the past simple of the verb to bumb?<br>`,
-            test_setup
+            `What is the past simple of the verb to bumb?<br>`
         );
     };
 
@@ -249,6 +232,47 @@ describe("Test question and answer audios", () => {
             expect(question_times[0]).toBeLessThan(question_times[1]);
 
             expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(false);
+        }
+    );
+
+    test.each([
+        [
+            `silence 1.mp3`,
+            `ankimedia.setup(); ankimedia.addall( "front" );`,
+            `questionTemplate`,
+        ],
+    ])(
+        `Pausing a audio should stop it from playing:\nfront %s '%s'\n...`,
+        async function (front_mp3, front_setup, templateName) {
+            await showQuestion(front_mp3, front_setup, templateName);
+            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-started-at]`);
+            expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
+
+            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+            expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(false);
+            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
+            expect(await getPausedMedias()).toEqual(0);
+
+            let question_times = await getPlayTimes(front_mp3);
+            let audio_src = await getAudioSource(front_mp3);
+
+            expect(audio_src).toEqual(front_mp3);
+            expect(question_times[0]).toBeGreaterThan(0);
+            expect(question_times[1]).toBeFalsy();
+
+            expect(await page.evaluate(() => ankimedia.togglePause())).toEqual(true);
+            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
+            expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
+
+            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`);
+            expect(await getPausedMedias()).toEqual(0);
+
+            question_times = await getPlayTimes(front_mp3);
+            audio_src = await getAudioSource(front_mp3);
+
+            expect(audio_src).toEqual(front_mp3);
+            expect(question_times[0]).toBeLessThan(question_times[1]);
+            expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
         }
     );
 
