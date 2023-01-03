@@ -9,8 +9,12 @@
 import "./ankimedia";
 const { AnkiMediaQueue, setAnkiMedia } = require("./ankimedia");
 
+// Jest is not showing which on which line the timeout is happening.
+// https://github.com/facebook/jest/issues/9881#issuecomment-654627853
+const g_wait_timeout = 5000;
+
 jest.disableAutomock();
-jest.setTimeout(100000);
+jest.setTimeout(g_wait_timeout + 1000);
 
 describe("Test question and answer exception handling", () => {
     let ankimedia = new AnkiMediaQueue();

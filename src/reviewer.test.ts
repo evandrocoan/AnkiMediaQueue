@@ -5,8 +5,12 @@
 import "./ankimedia";
 const { ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT } = require("./ankimedia");
 
+// Jest is not showing which on which line the timeout is happening.
+// https://github.com/facebook/jest/issues/9881#issuecomment-654627853
+const g_wait_timeout = 5000;
+
 jest.disableAutomock();
-jest.setTimeout(5000);
+jest.setTimeout(g_wait_timeout + 1000);
 
 describe("Test question and answer audios", () => {
     let self: any = global;
@@ -154,7 +158,7 @@ describe("Test question and answer audios", () => {
 
     beforeEach(async () => {
         await page.goto(`${address}/main_webview.html`);
-        await page.waitForSelector(`[id="qa"]`);
+        await page.waitForSelector(`[id="qa"]`, {timeout: g_wait_timeout});
         expect(await page.evaluate(async () => ankimedia.is_setup)).toEqual(false);
         // console.log(`Running '${expect.getState().currentTestName}'.`);
         pagelogs.length = 0;
@@ -222,7 +226,7 @@ describe("Test question and answer audios", () => {
         `Showing a question should play its audio file automatically:\nfront %s '%s'\n...`,
         async function (front_mp3, front_setup, templateName) {
             await showQuestion(front_mp3, front_setup, templateName);
-            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
 
             let question_times = await getPlayTimes(front_mp3);
@@ -237,7 +241,7 @@ describe("Test question and answer audios", () => {
 
     test(`Pausing a audio should stop it from playing:\n...`, async function () {
         await showQuestion("silence 1.mp3", `ankimedia.setup(); ankimedia.addall( "front" );`, `questionTemplate`);
-        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-started-at]`);
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-started-at]`, {timeout: g_wait_timeout});
         expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
 
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
@@ -256,7 +260,7 @@ describe("Test question and answer audios", () => {
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
         expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
 
-        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`);
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
         expect(await getPausedMedias()).toEqual(0);
 
         question_times = await getPlayTimes("silence 1.mp3");
@@ -275,7 +279,7 @@ describe("Test question and answer audios", () => {
             `ankimedia.setup({delay: 1.5}); ankimedia.add( "silence 2.mp3", "back" );`
         );
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
-        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`);
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
 
         expect(await getPausedMedias()).toEqual(0);
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeTruthy();
@@ -288,7 +292,7 @@ describe("Test question and answer audios", () => {
         expect(await getPausedMedias()).toEqual("silence 2.mp3, ");
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
 
-        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
         let question_times = await getPlayTimes("silence 1.mp3");
         let answer_times = await getPlayTimes("silence 2.mp3");
 
@@ -305,7 +309,7 @@ describe("Test question and answer audios", () => {
             "silence 2.mp3",
             `ankimedia.setup({delay: 1.5}); ankimedia.add( "silence 2.mp3", "back" );`
         );
-        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-started-at]`);
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-started-at]`, {timeout: g_wait_timeout});
         expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
 
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
@@ -324,7 +328,7 @@ describe("Test question and answer audios", () => {
         expect(await page.evaluate(() => ankimedia._playing_media.paused)).toBeFalsy();
         expect(await getPausedMedias()).toEqual("silence 1.mp3, ");
 
-        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
         expect(await getPausedMedias()).toEqual(0);
 
         question_times = await getPlayTimes("silence 1.mp3");
@@ -344,7 +348,7 @@ describe("Test question and answer audios", () => {
                 `ankimedia.setup({auto: false}); ankimedia.add( "silence 1.mp3", ${front_setup} );`,
                 `questionTemplate`
             );
-            await page.waitForSelector(`audio[id="silence 1.mp3"]`);
+            await page.waitForSelector(`audio[id="silence 1.mp3"]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
             let question_times = await getPlayTimes("silence 1.mp3");
 
@@ -353,7 +357,7 @@ describe("Test question and answer audios", () => {
                 `ankimedia.setup(); ankimedia.add( "silence 2.mp3", ${front_setup} );`,
                 `questionTemplate`
             );
-            await page.waitForSelector(`audio[id="silence 2.mp3"]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"]`, {timeout: g_wait_timeout});
             let second_question_times = await getPlayTimes("silence 2.mp3");
 
             expect(await getPausedMedias()).toEqual(0);
@@ -372,7 +376,7 @@ describe("Test question and answer audios", () => {
             `ankimedia.setup(); ankimedia.add( "silence 1.mp3", "front" );`,
             `sourceAudioTemplate`
         );
-        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`);
+        await page.waitForSelector(`audio[id="silence 1.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
 
         expect(await getPausedMedias()).toEqual(0);
         expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(false);
@@ -384,7 +388,7 @@ describe("Test question and answer audios", () => {
             `ankimedia.setup(); ankimedia.add( "silence 1.mp3", "front" );`,
             `noAudioTemplate`
         );
-        await page.waitForSelector(`input[type="button"]`);
+        await page.waitForSelector(`input[type="button"]`, {timeout: g_wait_timeout});
 
         expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(true);
         expect(pagelogs[0]).toContain('Could not find an HTML audio element when adding');
@@ -399,7 +403,7 @@ describe("Test question and answer audios", () => {
             `ankimedia.setup(); ankimedia.add( "silence 1.mp3", "front" );`,
             `noAudioTemplate`
         );
-        await page.waitForSelector(`input[type="button"]`);
+        await page.waitForSelector(`input[type="button"]`, {timeout: g_wait_timeout});
 
         await page.evaluate(async () =>
             _showQuestion(
@@ -407,7 +411,7 @@ describe("Test question and answer audios", () => {
                 ""
             )
         );
-        await page.waitForSelector(`div[id="noAudioTemplate"]`);
+        await page.waitForSelector(`div[id="noAudioTemplate"]`, {timeout: g_wait_timeout});
 
         expect(await page.evaluate(async () => ankimedia.is_setup)).toEqual(true);
         expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(true);
@@ -425,7 +429,7 @@ describe("Test question and answer audios", () => {
             "silence 2.mp3",
             `ankimedia.setup({delay: 1.0}); ankimedia.add( "silence 2.mp3", "back" );`
         );
-        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+        await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
 
         let question_times = await getPlayTimes("silence 1.mp3");
         let answer_times = await getPlayTimes("silence 2.mp3");
@@ -449,7 +453,7 @@ describe("Test question and answer audios", () => {
                 "silence 2.mp3",
                 `ankimedia.setup(); ankimedia.addall( ${back_setup} );`
             );
-            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
 
             let question_times = await getPlayTimes("silence 1.mp3");
             let answer_times = await getPlayTimes("silence 2.mp3");
@@ -479,7 +483,7 @@ describe("Test question and answer audios", () => {
                 "silence 2.mp3",
                 `ankimedia.setup(); ankimedia.add( "silence 2.mp3", ${back_setup} );`
             );
-            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
 
             let question_times = await getPlayTimes("silence 1.mp3");
             let answer_times = await getPlayTimes("silence 2.mp3");
@@ -512,7 +516,7 @@ describe("Test question and answer audios", () => {
                 "silence 2.mp3",
                 `ankimedia.setup(); ankimedia.add( "silence 2.mp3", ${back_setup} );`
             );
-            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
             let question_times = await getPlayTimes("silence 1.mp3");
             let answer_times = await getPlayTimes("silence 2.mp3");
 
@@ -521,7 +525,7 @@ describe("Test question and answer audios", () => {
 
             await deletePlayTimes("silence 2.mp3");
             await page.evaluate(async () => ankimedia.replay());
-            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
 
             let question_times1 = await getPlayTimes("silence 1.mp3");
             let answer_times1 = await getPlayTimes("silence 2.mp3");
@@ -537,7 +541,7 @@ describe("Test question and answer audios", () => {
 
             await deletePlayTimes("silence 2.mp3");
             await page.evaluate(async () => ankimedia.replay());
-            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
 
             let question_times2 = await getPlayTimes("silence 1.mp3");
             let answer_times2 = await getPlayTimes("silence 2.mp3");
@@ -583,7 +587,7 @@ describe("Test question and answer audios", () => {
         `Showing a new question should play its audio automatically:\nfront %s '%s',\nrefront %s '%s'\n...`,
         async function (front_mp3, front_setup, refront_mp3, refront_setup) {
             await showQuestion(front_mp3, front_setup, "questionTemplate");
-            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
 
             let first_question_times = await getPlayTimes(front_mp3);
@@ -591,7 +595,7 @@ describe("Test question and answer audios", () => {
 
             await page.evaluate(async () => ankimedia._reset());
             await showQuestion(refront_mp3, refront_setup, "questionTemplate");
-            await page.waitForSelector(`[id="${refront_mp3}"][data-has-ended-at]`);
+            await page.waitForSelector(`[id="${refront_mp3}"][data-has-ended-at]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
 
             let second_question_times = await getPlayTimes(refront_mp3);
@@ -665,14 +669,14 @@ describe("Test question and answer audios", () => {
             let selector = back_mp3 == front_mp3 ? `${front_mp3}1` : back_mp3;
 
             await showQuestion(front_mp3, front_setup, "questionTemplate");
-            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="${front_mp3}"][data-has-ended-at]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
 
             let question_times = await getPlayTimes(front_mp3);
             let question_audio_src = await getAudioSource(front_mp3);
 
             await questionAndAnswer(front_mp3, front_setup, back_mp3, back_setup);
-            await page.waitForSelector(`audio[id="${selector}"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="${selector}"][data-has-ended-at]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
 
             let question_times_recheck = await getPlayTimes(front_mp3);
@@ -703,7 +707,7 @@ describe("Test question and answer audios", () => {
         `The card preview should not play multiple times while editing the page:\nfront '%s', back '%s'\n...`,
         async function (front_setup, back_setup) {
             await page.goto(`${address}/card_layout.html`);
-            await page.waitForSelector(`[id="qa"]`);
+            await page.waitForSelector(`[id="qa"]`, {timeout: g_wait_timeout});
 
             let showEverything = async (first_mp3, second_mp3) =>
                 await questionAndAnswer(
@@ -714,7 +718,7 @@ describe("Test question and answer audios", () => {
                 );
 
             await showEverything("silence 1.mp3", "silence 2.mp3");
-            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"][data-has-ended-at]`, {timeout: g_wait_timeout});
             let question_times = await getPlayTimes("silence 1.mp3");
             let answer_times = await getPlayTimes("silence 2.mp3");
 
@@ -726,15 +730,15 @@ describe("Test question and answer audios", () => {
 
             await page.waitForTimeout(ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT);
             await showEverything("silence 1.mp3", "silence 2.mp3");
-            await page.waitForSelector(`audio[id="silence 2.mp3"]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
 
             await showEverything("silence 1.mp3", "silence 2.mp3");
-            await page.waitForSelector(`audio[id="silence 2.mp3"]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"]`, {timeout: g_wait_timeout});
             expect(await getPausedMedias()).toEqual(0);
 
             await showEverything("silence 1.mp3", "silence 2.mp3");
-            await page.waitForSelector(`audio[id="silence 2.mp3"]`);
+            await page.waitForSelector(`audio[id="silence 2.mp3"]`, {timeout: g_wait_timeout});
 
             expect(await getPausedMedias()).toEqual(0);
             expect(await page.evaluate(() => ankimedia.is_playing)).toEqual(false);

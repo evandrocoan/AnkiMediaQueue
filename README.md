@@ -17,8 +17,7 @@ On Windows, use `cmd.exe` instead msys2 bash, due to npm output buffer issues.
 Use this inside a test to pause its execution, allowing you to open the chrome console
 and while keeping the express server running: chrome://inspect/#devices
 ```js
-jest.setTimeout(2000000000);
-// Também adicione `page.waitForSelector(..., , {timeout: 5000000})` caso ainda tenha timeouts!
+const g_wait_timeout = 50000000;
 
 (async () => await page.setDefaultTimeout(2000000000))();
 (async () => await page.setDefaultNavigationTimeout(2000000000))();
