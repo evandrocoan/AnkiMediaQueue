@@ -384,8 +384,9 @@ class AnkiMediaQueue {
                     ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT
                 );
             } else {
+                let self = this;
                 document.addEventListener("DOMContentLoaded", function () {
-                    this._check_preview_page_timer = setTimeout(
+                    self._check_preview_page_timer = setTimeout(
                         block_preview,
                         ANKI_MEDIA_QUEUE_PREVIEW_TIMEOUT
                     );
