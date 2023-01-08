@@ -6,9 +6,9 @@ Use `export PUPPETEER_HEADLESS=false` to see a chrome windows running the tests.
 1. `npm run build`
 1. `npm run test`
 
-Use `anki\qt\ts> npm run build && npm run test -- reviewer-exceptions.test.ts` to run a single test file.
+Use `source_dir> npm run build && npm run test -- reviewer-exceptions.test.ts` to run a single test file.
 
-Use `anki\qt\ts> npm run build && npm run test -- --testNamePattern "Test showing a question does not reset ankimedia state"` to run a single test case.
+Use `source_dir> npm run build && npm run test -- --testNamePattern "Test showing a question does not reset ankimedia state"` to run a single test case.
 
 On Windows, use `cmd.exe` instead msys2 bash, due to npm output buffer issues.
 
@@ -30,6 +30,10 @@ PUPPETEER_SLOWMO=500   # milliseconds
 PUPPUPPETEER_CHROME_ARGS="--window-position=960,10"
 PUPPETEER_HEADLESS=false
 ```
+
+Instead of creatin the `.env` file,
+for the VSCode jest extension,
+you can set the user setting `"jest.nodeEnv": { "PUPPETEER_HEADLESS": "false" }`.
 
 ### License
 
