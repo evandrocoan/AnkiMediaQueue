@@ -18,7 +18,7 @@ jest.setTimeout(g_wait_timeout + 1000);
 
 describe("Test question and answer exception handling", () => {
     let ankimedia = new AnkiMediaQueue();
-    let pagelogs = [];
+    let pagelogs : Array<any> = [];
     let oldconsole = console.log;
 
     console.log = function(...args) {
