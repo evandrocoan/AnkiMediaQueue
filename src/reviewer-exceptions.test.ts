@@ -144,7 +144,7 @@ describe("Test question and answer exception handling", () => {
     test(`do not add media files with the correct speed or file name`, async function () {
         ankimedia.setup();
         expect(() => ankimedia.add({}, "front")).toThrowError(
-            /The 'filename=.*' is not a valid string/
+            /The ankimedia\.add\(\) 'htmlfield=.*' is not a valid string/
         );
         expect(() => ankimedia.add("thing.mp3", "front", {})).toThrowError(
             /The 'speed=.*' is not a valid positive number/

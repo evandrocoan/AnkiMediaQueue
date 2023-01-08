@@ -92,6 +92,7 @@ class AnkiMediaQueue {
         this._validateSpeed = this._validateSpeed.bind(this);
         this._validateSetup = this._validateSetup.bind(this);
         this.add = this.add.bind(this);
+        this._add = this._add.bind(this);
         this._checkPreviewPage = this._checkPreviewPage.bind(this);
         this.replay = this.replay.bind(this);
         this._play = this._play.bind(this);
@@ -159,6 +160,8 @@ class AnkiMediaQueue {
         this._add_duplicates_reset = 0;
         this._addall_reset = 0;
         this._addall_last_where = "front";
+        this._playing_media = undefined;
+        this._playing_element = undefined;
         this._clearPlayingElement();
         this._was_next_play_paused = false;
         this._is_playing_resuming = false;
@@ -222,22 +225,22 @@ class AnkiMediaQueue {
             `or ankimedia.${caller}( "file.mp3", "back" ) if this is the answer side.`;
         if (!where) {
             throw new Error(
-                `Missing the 'where=${where}' parameter!\n${fix_message} ` +
+                `ankimedia.${caller}: Missing the 'where=${where}' parameter!\n${fix_message} ` +
                     this._getMediaInfo(media)
             );
         }
         if (!(where == "front" || where == "back")) {
             throw new Error(
-                `Invalid 'where=${where}' parameter!\n${fix_message} ` +
+                `ankimedia.${caller}: Invalid 'where=${where}' parameter!\n${fix_message} ` +
                     this._getMediaInfo(media)
             );
         }
     }
 
-    _validateSpeed(speed, media = undefined) {
+    _validateSpeed(location, speed, media = undefined) {
         if (typeof speed != "number" || speed <= 0) {
             throw new Error(
-                `The 'speed=${speed}/${typeof speed}' is not a valid positive number.` +
+                `ankimedia.${location}: The 'speed=${speed}/${typeof speed}' is not a valid positive number.` +
                     this._getMediaInfo(media)
             );
         }
@@ -263,7 +266,7 @@ class AnkiMediaQueue {
             );
         }
         this._validateSetup("addall");
-        this._validateSpeed(speed);
+        this._validateSpeed("addall", speed);
 
         if (where) {
             this._validateWhere(where, "addall");
@@ -284,7 +287,7 @@ class AnkiMediaQueue {
                 let localwhere =
                     media.getAttribute("data-where") || this._whereIs(media);
                 this._validateWhere(localwhere, "addall", media);
-                this._checkDataAttributes(media);
+                this._checkDataAttributes("addall", media);
 
                 if (localwhere == "front") {
                     this.frontmedias.set(media.id, 0);
@@ -293,7 +296,7 @@ class AnkiMediaQueue {
                     return;
                 }
 
-                this.add(this._getSource(media), localwhere, speed);
+                this._add(this._getSource(media), localwhere, speed);
             }, this.other_medias);
         }
     }
@@ -302,7 +305,7 @@ class AnkiMediaQueue {
      * Add an audio file to the playing queue and immediately starts playing, if not playing
      * already.
      *
-     * @param {string} filename - an audio filename for playing.
+     * @param {string} htmlfield - an audio filename or html as string to find audios for playing.
      * @param {string} where    - pass "front" if this is being called on the card-front,
      *        otherwise, pass "back" as it is being called on the card-back.
      *        If not specified, each media element to be added automatically can also have a
@@ -312,21 +315,39 @@ class AnkiMediaQueue {
      *        Each media element can also have an attribute as `data-speed="1.0"` indicating
      *        the speed it should play. The `data-speed` value has precedence over this parameter.
      */
-    add(filename, where = undefined, speed = undefined) {
-        speed = speed || 1.0;
-
+    add(htmlfield, where = undefined, speed = undefined) {
         if (arguments.length < 1 || arguments.length > 3) {
             throw new Error(
                 `The function ankimedia.add() requires from 1 up to 3 argument(s) only, not ${arguments.length}!`
             );
         }
 
-        if (!(typeof filename == "string")) {
+        if (!(typeof htmlfield == "string")) {
             throw new Error(
-                `The 'filename=${filename}/${typeof filename}' is not a valid string. ` +
+                `The ankimedia.add() 'htmlfield=${htmlfield}/${typeof htmlfield}' is not a valid string. ` +
                     this._getMediaInfo(undefined)
             );
         }
+
+        var htmlObject = document.createElement('div');
+        htmlObject.innerHTML = htmlfield;
+
+        let items = [];
+        items.push(...Array.from(htmlObject.querySelectorAll("audio")));
+        items.push(...Array.from(htmlObject.querySelectorAll("video")));
+
+        if (items.length) {
+            items.forEach((media) => {
+                this._add(media.getAttribute("src"), where, speed);
+            });
+        }
+        else {
+            this._add(htmlfield, where, speed);
+        }
+    }
+
+    _add(filename, where = undefined, speed = undefined) {
+        speed = speed || 1.0;
 
         filename = filename.trim();
         if (filename.length < 1) {
@@ -337,7 +358,7 @@ class AnkiMediaQueue {
             return;
         }
 
-        let media = this._getMediaElement(filename, this.add_duplicates);
+        let media = this._getMediaElement("add", filename, this.add_duplicates);
         if (media) {
             where = media.getAttribute("data-where") || where || this._whereIs(media);
         }
@@ -350,7 +371,7 @@ class AnkiMediaQueue {
 
         this._validateSetup("add");
         this._validateWhere(where, "add", media);
-        this._validateSpeed(speed, media);
+        this._validateSpeed("addall", speed, media);
 
         // this._debug(`Trying ${filename} ${where} ${this.where}...`);
         if (!this.has_previewed && (this._checkPreviewPage() || where == this.where)) {
@@ -399,6 +420,9 @@ class AnkiMediaQueue {
         return false;
     }
 
+    /**
+     * Re-play the medias as done in the first time the card answer or question was shown.
+     */
     replay() {
         // this._debug(`replay '${this.is_playing}'`);
         if (this._is_autoseek_timer) {
@@ -479,7 +503,7 @@ class AnkiMediaQueue {
             if (first) {
                 filename = first[0];
                 speed = first[1];
-                media = this._getMediaElement(filename, this.play_duplicates);
+                media = this._getMediaElement("_playnext", filename, this.play_duplicates);
 
                 // this._debug(`Playing ${this.skip_front} ${!!media} '${filename}'...`);
                 if (!media) {
@@ -506,7 +530,7 @@ class AnkiMediaQueue {
             if (playpromise) {
                 playpromise.catch((error) =>
                     console.log(
-                        `Could not play '${filename}' due to '${error}'! ` +
+                        `ankimedia: Could not play '${filename}' due to '${error}'! ` +
                             this._getMediaInfo(media)
                     )
                 ).then(_ => {
@@ -514,7 +538,7 @@ class AnkiMediaQueue {
                 });
             } else {
                 console.log(
-                    `Could not play the media '${filename}'! ` +
+                    `ankimedia: Could not play the media '${filename}'! ` +
                         this._getMediaInfo(media)
                 );
             }
@@ -559,18 +583,18 @@ class AnkiMediaQueue {
         return results;
     }
 
-    _getMediaElement(filename: string, selected: Map<string, number>) {
+    _getMediaElement(location: string, filename: string, selected: Map<string, number>) {
         // Anki is filling .src audio fields replacing ' ' with %20, which breaks everything as
         // .add() still being called with spaces ' ' instead of %20. Then, try both variations
         // in case some day Anki fixes its interface and stop replacing ' ' with %20.
-        let media = this.__getMediaElement(filename, selected);
+        let media = this.__getMediaElement(location, filename, selected);
         if (!media) {
-            media = this.__getMediaElement(filename.replace(/ /g, '%20'), selected);
+            media = this.__getMediaElement(location, filename.replace(/ /g, '%20'), selected);
         }
         return media;
     }
 
-    __getMediaElement(filename: string, selected: Map<string, number>) {
+    __getMediaElement(location: string, filename: string, selected: Map<string, number>) {
         let media = this.files.get(filename);
         if (media) {
             // if duplicate elements were found, select the one in a specific index
@@ -586,7 +610,7 @@ class AnkiMediaQueue {
                     media = last_media;
                 }
             }
-            this._checkDataAttributes(media);
+            this._checkDataAttributes(location, media);
         }
         return media;
     }
@@ -624,30 +648,30 @@ class AnkiMediaQueue {
 
         if (typeof parameters != "object") {
             throw new Error(
-                `Invalid 'parameters=${parameters}/${typeof parameters}' passed to setup!`
+                `ankimedia.setup: Invalid 'parameters=${parameters}/${typeof parameters}' passed to setup!`
             );
         }
         for (let [key, value] of Object.entries(parameters)) {
             if (!(key in default_parameters)) {
                 throw new Error(
-                    `Invalid 'parameters=${key}-${value}/${typeof key}' passed to setup!`
+                    `ankimedia.setup: Invalid 'parameters=${key}-${value}/${typeof key}' passed to setup!`
                 );
             }
         }
 
         if (!Array.isArray(medias)) {
             throw new Error(
-                `The 'medias=${medias}/${typeof medias}' is not a valid array object!`
+                `ankimedia.setup: The 'medias=${medias}/${typeof medias}' is not a valid array object!`
             );
         }
         if (typeof delay != "number" || delay < 0) {
             throw new Error(
-                `The 'delay=${delay}/${typeof delay}' is not a valid positive number!`
+                `ankimedia.setup: The 'delay=${delay}/${typeof delay}' is not a valid positive number!`
             );
         }
         if (typeof extra != "function" && extra != undefined) {
             throw new Error(
-                `The 'extra=${extra}/${typeof extra}' is not a valid function!`
+                `ankimedia.setup: The 'extra=${extra}/${typeof extra}' is not a valid function!`
             );
         }
 
@@ -689,7 +713,7 @@ class AnkiMediaQueue {
         this.duplicates.clear();
 
         setAnkiMedia((media) => {
-            this._checkDataAttributes(media);
+            this._checkDataAttributes("setup", media);
             let data_file = this._getSource(media);
 
             // Automatically gives an object.id to every media file, if they do not have one.
@@ -721,20 +745,20 @@ class AnkiMediaQueue {
         }, this.other_medias);
     }
 
-    _checkDataAttributes(media) {
+    _checkDataAttributes(location: string, media: HTMLMediaElement) {
         let data_file = this._getSource(media);
         let data_speed = media.getAttribute("data-speed");
 
         if (typeof data_file != "string") {
             throw new Error(
-                `A media element is missing its 'src=${data_file}' attribute. ` +
+                `ankimedia.${location}: A media element is missing its 'src=${data_file}' attribute. ` +
                     this._getMediaInfo(media)
             );
         }
         let timmed_data_file = data_file.trim();
         if (timmed_data_file != data_file) {
             throw new Error(
-                `A media element has leading or trailing whitespaces on its 'src=${data_file}' attribute. ` +
+                `ankimedia.${location}: A media element has leading or trailing whitespaces on its 'src=${data_file}' attribute. ` +
                     this._getMediaInfo(media)
             );
         }
@@ -743,11 +767,11 @@ class AnkiMediaQueue {
             (typeof data_speed != "string" || isNaN(data_speed as any))
         ) {
             throw new Error(
-                `A media element has an invalid 'data-speed=${data_speed}/${typeof data_speed}' attribute. ` +
+                `ankimedia.${location}: A media element has an invalid 'data-speed=${data_speed}/${typeof data_speed}' attribute. ` +
                     this._getMediaInfo(media)
             );
         }
-        this._validateSpeed(parseFloat(data_speed), media);
+        this._validateSpeed(location, parseFloat(data_speed), media);
     }
 
     _moveAudioElements(extra: Function | undefined) {
@@ -849,7 +873,7 @@ class AnkiMediaQueue {
                 playpromise.catch((error) => {
                     this._is_playing_resuming = false;
                     console.log(
-                        `Could not unpause the media due to '${error}'! ` +
+                        `ankimedia.togglePause: Could not unpause the media due to '${error}'! ` +
                             this._getMediaInfo(playing_media)
                     );
                 });
