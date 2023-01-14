@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "target": "es2018",
+        "newLine": "LF",
         "module": "commonjs",
         "lib": ["es2018", "dom"],
         "rootDir": "src",
