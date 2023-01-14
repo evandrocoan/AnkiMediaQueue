@@ -35,6 +35,11 @@ Instead of creatin the `.env` file,
 for the VSCode jest extension,
 you can set the user setting `"jest.nodeEnv": { "PUPPETEER_HEADLESS": "false" }`.
 
+You may change `package.json` to copy the `ankimedia.js` built file directly into your Anki build location:
+```json
+"build": "tsc --build && cp .\\build\\ankimedia.js F:\\anki2\\qt\\aqt\\data\\web\\js\\vendor\\ && cp .\\build\\ankimedia.js F:\\anki2\\out\\qt\\_aqt\\data\\web\\js\\vendor",
+```
+
 ### License
 
 ```
