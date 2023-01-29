@@ -162,7 +162,7 @@ describe("Test question and answer audios", () => {
     test.each([
         [
             `silence 1.mp3`,
-            `ankimedia.setup(); ankimedia.addall( "front" );`,
+            `ankimedia.setup({delay: 0, wait: true}); ankimedia.addall( "front" );`,
             `questionTemplate`,
         ],
         [
@@ -172,7 +172,7 @@ describe("Test question and answer audios", () => {
         ],
         [
             `silence 2.mp3`,
-            'ankimedia.setup(); ankimedia.add( `<audio src="silence 2.mp3" controlslist="nodownload" controls></audio>`, "front" );',
+            'ankimedia.setup({delay: 0, wait: true}); ankimedia.add( `<audio src="silence 2.mp3" controlslist="nodownload" controls></audio>`, "front" );',
             `questionTemplate`,
         ],
         [
@@ -186,7 +186,7 @@ describe("Test question and answer audios", () => {
             `dataSpeedTemplate`,
         ],
         // Without explicit "front"/"back"
-        [`silence 1.mp3`, `ankimedia.setup(); ankimedia.addall();`, `questionTemplate`],
+        [`silence 1.mp3`, `ankimedia.setup({delay: 0, wait: true}); ankimedia.addall();`, `questionTemplate`],
         [
             `silence 1.mp3`,
             `ankimedia.setup({delay: 0, wait: false, medias: []}); ankimedia.addall();`,
@@ -194,7 +194,7 @@ describe("Test question and answer audios", () => {
         ],
         [
             `silence 2.mp3`,
-            'ankimedia.setup(); ankimedia.add( `<audio src="silence 2.mp3" controlslist="nodownload" controls></audio>` );',
+            'ankimedia.setup({delay: 0, wait: true}); ankimedia.add( `<audio src="silence 2.mp3" controlslist="nodownload" controls></audio>` );',
             `questionTemplate`,
         ],
         [
@@ -210,7 +210,7 @@ describe("Test question and answer audios", () => {
         // Sounds names with %20 should play normally
         [
             `silence%201.mp3`,
-            'ankimedia.setup(); ankimedia.add( `<audio src="silence 1.mp3" controlslist="nodownload" controls></audio>`, "front" );',
+            'ankimedia.setup({delay: 0, wait: true}); ankimedia.add( `<audio src="silence 1.mp3" controlslist="nodownload" controls></audio>`, "front" );',
             `questionTemplate`,
         ],
     ])(
