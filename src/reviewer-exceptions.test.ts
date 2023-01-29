@@ -17,7 +17,7 @@ jest.disableAutomock();
 jest.setTimeout(g_wait_timeout + 1000);
 
 describe("Test question and answer exception handling", () => {
-    let ankimedia = new AnkiMediaQueue();
+    let ankimedia;
     let pagelogs : Array<any> = [];
     let oldconsole = console.log;
 
@@ -27,7 +27,7 @@ describe("Test question and answer exception handling", () => {
     }
 
     beforeEach(async () => {
-        ankimedia._reset();
+        ankimedia = new AnkiMediaQueue();;
         document.body.innerHTML = "";
         pagelogs.length = 0;
     });
