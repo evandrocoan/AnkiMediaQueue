@@ -888,6 +888,17 @@ class AnkiMediaQueue {
         }, this.other_medias);
         return false;
     }
+
+    /**
+     * Return false if a media was not sought and true if a media was sought.
+     */
+    seekRelative(seconds: number) {
+        if(this._playing_element) {
+            this._playing_element.currentTime += seconds;
+            return true;
+        }
+        return false;
+    }
 }
 
 var ankimedia = new AnkiMediaQueue();
